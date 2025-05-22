@@ -704,7 +704,9 @@ local function attackMonsters(monsterName)
         end
     end
 end
-local function createUI()
+local v14 = loadstring(game:HttpGet("https://https://raw.githubusercontent.com/TloiIos/Tloi/refs/heads/main/thanhloi.lua"))();
+local v15 = v14:CreateWindow({
+    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AutoFarmUI"
     ScreenGui.Parent = game:GetService("CoreGui")
@@ -718,8 +720,6 @@ local function createUI()
     Frame.AnchorPoint = Vector2.new(0, 0.5)
     Frame.Parent = ScreenGui
 
-local v14 = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))();
-local v15 = v14:CreateWindow({
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 35)
     title.Position = UDim2.new(0, 0, 0, 0)
@@ -732,51 +732,49 @@ local v15 = v14:CreateWindow({
 
     -- Nút bật/tắt AutoFarm
     local btnAutoFarm = Instance.new("TextButton")
-    btnAutoFarm.Size = UDim2.new(0.8, 0, 0, 45)
-    btnAutoFarm.Position = UDim2.new(0.1, 0, 0, 50)
-    btnAutoFarm.BackgroundColor3 = Color3.fromRGB(65, 105, 225)
-    btnAutoFarm.TextColor3 = Color3.new(1, 1, 1)
-    btnAutoFarm.Font = Enum.Font.GothamSemibold
-    btnAutoFarm.TextSize = 20
-    btnAutoFarm.Text = "Auto Farm: OFF"
-    btnAutoFarm.Parent = Frame
-    btnAutoFarm.AutoButtonColor = false
+    v15.Size = UDim2.new(0.8, 0, 0, 45)
+    v15.Position = UDim2.new(0.1, 0, 0, 50)
+    v15.BackgroundColor3 = Color3.fromRGB(65, 105, 225)
+    v15.TextColor3 = Color3.new(1, 1, 1)
+    v15.Font = Enum.Font.GothamSemibold
+    v15.TextSize = 20
+   v15.Text = "Auto Farm: OFF"
+    v15.Parent = Frame
+    v15.AutoButtonColor = false
 
     btnAutoFarm.MouseButton1Click:Connect(function()
         _G.AutoFarm = not _G.AutoFarm
         if _G.AutoFarm then
-            btnAutoFarm.Text = "Auto Farm: ON"
-            btnAutoFarm.BackgroundColor3 = Color3.fromRGB(34, 139, 34) -- xanh lá bật
+           v15.Text = "Auto Farm: ON"
+            v15.BackgroundColor3 = Color3.fromRGB(34, 139, 34) -- xanh lá bật
             startAutoFarm()
         else
-            btnAutoFarm.Text = "Auto Farm: OFF"
-            btnAutoFarm.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- xanh dương tắt
+            v15.Text = "Auto Farm: OFF"
+            v15.BackgroundColor3 = Color3.fromRGB(65, 105, 225) -- xanh dương tắt
         end
     end)
 
     -- Nút bật/tắt Fast Attack
-    local btnFastAttack = Instance.new("TextButton")
-    btnFastAttack.Size = UDim2.new(0.8, 0, 0, 45)
-    btnFastAttack.Position = UDim2.new(0.1, 0, 0, 110)
-    btnFastAttack.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
-    btnFastAttack.TextColor3 = Color3.new(1, 1, 1)
-    btnFastAttack.Font = Enum.Font.GothamSemibold
-    btnFastAttack.TextSize = 20
-    btnFastAttack.Text = "Fast Attack: OFF"
-    btnFastAttack.Parent = Frame
-    btnFastAttack.AutoButtonColor = false
+    local v15 = Instance.new("TextButton")
+   v15k.Size = UDim2.new(0.8, 0, 0, 45)
+    v15k.Position = UDim2.new(0.1, 0, 0, 110)
+    v15.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+   v15.TextColor3 = Color3.new(1, 1, 1)
+    v15.Font = Enum.Font.GothamSemibold
+    v15.TextSize = 20
+   v15.Text = "Fast Attack: OFF"
+    v15.Parent = Frame
+    v15.AutoButtonColor = false
 
-    btnFastAttack.MouseButton1Click:Connect(function()
+   v15.MouseButton1Click:Connect(function()
         _G.FastAttack = not _G.FastAttack
         if _G.FastAttack then
-            btnFastAttack.Text = "Fast Attack: ON"
-            btnFastAttack.BackgroundColor3 = Color3.fromRGB(34, 139, 34)
+           v15.Text = "Fast Attack: ON"
+            v15k.BackgroundColor3 = Color3.fromRGB(34, 139, 34)
         else
-            btnFastAttack.Text = "Fast Attack: OFF"
-            btnFastAttack.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+            v15.Text = "Fast Attack: OFF"
+           v15.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
         end
     end)
 
 end
-
-createUI()
