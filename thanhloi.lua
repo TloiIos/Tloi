@@ -719,7 +719,7 @@ local function createUI()
     Frame.Parent = ScreenGui
 
 local v14 = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))();
-local v15 = v14:CreateWindow;
+local v15 = v14:CreateWindow({
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 35)
     title.Position = UDim2.new(0, 0, 0, 0)
