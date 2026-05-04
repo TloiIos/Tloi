@@ -15,7 +15,7 @@ local function SecureBypass()
 end
 SecureBypass()
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
 local Window = OrionLib:MakeWindow({
     Name = "⚔️ UAOT VIP | Gemini Edition", 
     HidePremium = false, 
@@ -26,20 +26,18 @@ local Window = OrionLib:MakeWindow({
 local Settings = {
     AutoFarm = false,
     FlySpeed = 400,
-    Distance = 4,
-    AutoSlash = true 
+    Distance = 4
 }
-
 
 local UserInputService = game:GetService("UserInputService")
 local GuiVisible = true
 
-UserInputService.InputBegan:Connect(function(input)
+UserInputService.InputBegan:Connect(function(input, processed)
+ 
     local touches = UserInputService:GetTouches()
     if #touches >= 3 then
         GuiVisible = not GuiVisible
-        local coreGui = game:GetService("CoreGui")
-        local orionGui = coreGui:FindFirstChild("Orion")
+        local orionGui = game:GetService("CoreGui"):FindFirstChild("Orion")
         if orionGui then
             orionGui.Enabled = GuiVisible
         end
@@ -47,26 +45,33 @@ UserInputService.InputBegan:Connect(function(input)
 end)
 
 
-function AddESP(Titan)
+local function CreateESP(Titan)
     pcall(function()
-        if Titan:FindFirstChild("Nape") and not Titan.Nape:FindFirstChild("ESP") then
-            local bgui = Instance.new("BillboardGui", Titan.Nape)
-            bgui.Name = "ESP"
-            bgui.AlwaysOnTop = true
-            bgui.Size = UDim2.new(4, 0, 4, 0)
-            local frame = Instance.new("Frame", bgui)
-            frame.Size = UDim2.new(1, 0, 1, 0)
-            frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            frame.BackgroundTransparency = 0.5
-            Instance.new("UIStroke", frame).Thickness = 2
+        if Titan:FindFirstChild("Nape") and not Titan.Nape:FindFirstChild("ESP_Box") then
+            local Billboard = Instance.new("BillboardGui", Titan.Nape)
+            Billboard.Name = "ESP_Box"
+            Billboard.AlwaysOnTop = true
+            Billboard.Size = UDim2.new(4, 0, 4, 0)
+            
+            local Frame = Instance.new("Frame", Billboard)
+            Frame.Size = UDim2.new(1, 0, 1, 0)
+            Frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            Frame.BackgroundTransparency = 0.5
+            
+            local Stroke = Instance.new("UIStroke", Frame)
+            Stroke.Thickness = 2
+            Stroke.Color = Color3.new(1, 1, 1)
         end
     end)
 end
 
 task.spawn(function()
-    while task.wait(1.5) do
+    while task.wait(1) do
+        
         for _, v in pairs(workspace:GetChildren()) do
-            if v:FindFirstChild("Nape") then AddESP(v) end
+            if v:FindFirstChild("Nape") or v.Name:lower():find("titan") then
+                CreateESP(v)
+            end
         end
     end
 end)
@@ -75,16 +80,17 @@ end)
 local MainTab = Window:MakeTab({Name = "Farm Titan", Icon = "rbxassetid://4483345998"})
 
 MainTab:AddToggle({
-    Name = "Auto Diệt Titan + Chém (Mượt)",
+    Name = "Auto Bay + Tự Chém (Fix Nút)",
     Default = false,
     Callback = function(Value)
         Settings.AutoFarm = Value
         if Value then
             task.spawn(function()
                 while Settings.AutoFarm do
-                    pcall(function()
+                    local success, err = pcall(function()
                         local Target = nil
                         local MinDist = math.huge
+                        
                         for _, v in pairs(workspace:GetChildren()) do
                             if v:FindFirstChild("Nape") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                                 local d = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Nape.Position).Magnitude
@@ -98,19 +104,18 @@ MainTab:AddToggle({
                             local Dist = (Root.Position - TargetPos.Position).Magnitude
                             
                             if Dist > 10 then
-                                -- Bay tới gáy
+                                
                                 Root.CFrame = Root.CFrame:Lerp(TargetPos, task.wait() * (Settings.FlySpeed / Dist))
                             else
-                                -- Đã đến sát gáy: Khóa vị trí và TỰ ĐỘNG CHÉM
+                            
                                 Root.CFrame = TargetPos
-                                if Settings.AutoSlash then
-                                    game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
-                                    task.wait(0.05)
-                                    game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
-                                end
+                                game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                                task.wait(0.05)
+                                game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
                             end
                         end
                     end)
+                    if not success then task.wait(1) end
                     task.wait()
                 end
             end)
