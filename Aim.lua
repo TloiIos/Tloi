@@ -1,133 +1,123 @@
-
-local function SecureBypass()
-    pcall(function()
-        local mt = getrawmetatable(game)
-        setreadonly(mt, false)
-        local old = mt.__namecall
-        mt.__namecall = newcclosure(function(self, ...)
-            if getnamecallmethod() == "FireServer" and (self.Name == "RemoteEvent" or self.Name == "DataEvent") then
-                return nil 
-            end
-            return old(self, ...)
-        end)
-        setreadonly(mt, true)
+-- [[ 🛡️ BYPASS NHẸ ]] --
+pcall(function()
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+    local old = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        return old(self, ...)
     end)
-end
-SecureBypass()
+    setreadonly(mt, true)
+end)
 
-local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
+-- [[ 🎨 LOAD ORION LIB ]] --
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+
 local Window = OrionLib:MakeWindow({
-    Name = "⚔️ UAOT VIP | Gemini Edition", 
-    HidePremium = false, 
-    SaveConfig = false, 
-    IntroText = "3 Ngón tay để ẩn/hiện Menu"
+    Name = "⚔️ UAOT VIP | AUTO KILL FIX",
+    HidePremium = false,
+    SaveConfig = false,
+    IntroText = "Untitled Attack on Titan"
 })
 
+-- [[ ⚙️ SETTINGS ]] --
 local Settings = {
-    AutoFarm = false,
-    FlySpeed = 400,
-    Distance = 4
+    AutoKill = false,
+    Distance = 3.5,
+    AttackSpeed = 0.05
 }
 
-local UserInputService = game:GetService("UserInputService")
-local GuiVisible = true
+local player = game.Players.LocalPlayer
+local function GetChar() return player.Character or player.CharacterAdded:Wait() end
 
-UserInputService.InputBegan:Connect(function(input, processed)
- 
-    local touches = UserInputService:GetTouches()
-    if #touches >= 3 then
-        GuiVisible = not GuiVisible
-        local orionGui = game:GetService("CoreGui"):FindFirstChild("Orion")
-        if orionGui then
-            orionGui.Enabled = GuiVisible
-        end
-    end
-end)
-
-
-local function CreateESP(Titan)
-    pcall(function()
-        if Titan:FindFirstChild("Nape") and not Titan.Nape:FindFirstChild("ESP_Box") then
-            local Billboard = Instance.new("BillboardGui", Titan.Nape)
-            Billboard.Name = "ESP_Box"
-            Billboard.AlwaysOnTop = true
-            Billboard.Size = UDim2.new(4, 0, 4, 0)
-            
-            local Frame = Instance.new("Frame", Billboard)
-            Frame.Size = UDim2.new(1, 0, 1, 0)
-            Frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            Frame.BackgroundTransparency = 0.5
-            
-            local Stroke = Instance.new("UIStroke", Frame)
-            Stroke.Thickness = 2
-            Stroke.Color = Color3.new(1, 1, 1)
-        end
-    end)
-end
-
-task.spawn(function()
-    while task.wait(1) do
-        
-        for _, v in pairs(workspace:GetChildren()) do
-            if v:FindFirstChild("Nape") or v.Name:lower():find("titan") then
-                CreateESP(v)
+-- [[ 🗡️ LOGIC TÌM TITAN GẦN NHẤT ]] --
+local function GetClosestTitan()
+    local target, dist = nil, math.huge
+    local char = GetChar()
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+    
+    for _, v in pairs(workspace:GetChildren()) do
+        -- Kiểm tra model có gáy (Nape) và còn sống
+        if v:FindFirstChild("Nape") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            local d = (char.HumanoidRootPart.Position - v.Nape.Position).Magnitude
+            if d < dist then
+                dist = d
+                target = v
             end
         end
     end
-end)
+    return target
+end
 
-
-local MainTab = Window:MakeTab({Name = "Farm Titan", Icon = "rbxassetid://4483345998"})
+-- [[ 📌 TAB CHÍNH ]] --
+local MainTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://4483345998"
+})
 
 MainTab:AddToggle({
-    Name = "Auto Bay + Tự Chém (Fix Nút)",
+    Name = "Auto Kill Titan (Tele Gáy)",
     Default = false,
     Callback = function(Value)
-        Settings.AutoFarm = Value
+        Settings.AutoKill = Value
         if Value then
             task.spawn(function()
-                while Settings.AutoFarm do
-                    local success, err = pcall(function()
-                        local Target = nil
-                        local MinDist = math.huge
+                while Settings.AutoKill do
+                    pcall(function()
+                        local titan = GetClosestTitan()
+                        local char = GetChar()
+                        local root = char:FindFirstChild("HumanoidRootPart")
                         
-                        for _, v in pairs(workspace:GetChildren()) do
-                            if v:FindFirstChild("Nape") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                                local d = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Nape.Position).Magnitude
-                                if d < MinDist then MinDist = d; Target = v end
-                            end
-                        end
-
-                        if Target then
-                            local Root = game.Players.LocalPlayer.Character.HumanoidRootPart
-                            local TargetPos = Target.Nape.CFrame * CFrame.new(0, 0, Settings.Distance)
-                            local Dist = (Root.Position - TargetPos.Position).Magnitude
+                        if titan and root then
+                            -- Teleport chính xác vào phía sau gáy
+                            local targetPos = titan.Nape.CFrame * CFrame.new(0, 0, Settings.Distance)
+                            root.CFrame = targetPos
                             
-                            if Dist > 10 then
-                                
-                                Root.CFrame = Root.CFrame:Lerp(TargetPos, task.wait() * (Settings.FlySpeed / Dist))
-                            else
-                            
-                                Root.CFrame = TargetPos
-                                game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
-                                task.wait(0.05)
-                                game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
-                            end
+                            -- Tự động chém
+                            game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                            task.wait(Settings.AttackSpeed)
+                            game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
                         end
                     end)
-                    if not success then task.wait(1) end
                     task.wait()
                 end
             end)
         end
-    end    
+    end
 })
 
 MainTab:AddSlider({
-    Name = "Tốc độ bay",
-    Min = 100, Max = 1000, Default = 400, Increment = 50,
-    ValueName = "Studs",
-    Callback = function(Value) Settings.FlySpeed = Value end    
+    Name = "Khoảng cách chém",
+    Min = 1, Max = 10, Default = 3.5, Increment = 0.5,
+    Callback = function(v) Settings.Distance = v end
 })
+
+-- [[ 👁️ ESP SYSTEM ]] --
+local ESPTab = Window:MakeTab({ Name = "Visuals", Icon = "rbxassetid://4483345998" })
+local ESPEnabled = false
+
+ESPTab:AddToggle({
+    Name = "ESP Titan",
+    Default = false,
+    Callback = function(v) ESPEnabled = v end
+})
+
+task.spawn(function()
+    while task.wait(1) do
+        if ESPEnabled then
+            for _, v in pairs(workspace:GetChildren()) do
+                if v:FindFirstChild("Nape") and not v.Nape:FindFirstChild("ESP") then
+                    local bg = Instance.new("BillboardGui", v.Nape)
+                    bg.Name = "ESP"
+                    bg.AlwaysOnTop = true
+                    bg.Size = UDim2.new(4,0,4,0)
+                    local f = Instance.new("Frame", bg)
+                    f.Size = UDim2.new(1,0,1,0)
+                    f.BackgroundColor3 = Color3.new(1,0,0)
+                    f.BackgroundTransparency = 0.5
+                end
+            end
+        end
+    end
+end)
 
 OrionLib:Init()
