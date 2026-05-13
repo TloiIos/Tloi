@@ -14,7 +14,7 @@
         input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
         button { background: var(--neon); color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.4s; width: 90%; text-transform: uppercase; letter-spacing: 2px; }
         button:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: scale(1.05); }
-        #status { margin-top: 25px; font-size: 14px; font-weight: bold; }
+        #status { margin-top: 25px; font-size: 14px; font-weight: bold; min-height: 20px; }
         .loading { color: #f1c40f; } .success { color: #2ecc71; } .error { color: #e74c3c; }
     </style>
 </head>
@@ -30,56 +30,81 @@
     </div>
 
     <script>
-        // === CẤU HÌNH ADMIN (LỢI ĐIỀN Ở ĐÂY) ===
+        // === CẤU HÌNH ADMIN ===
         const GITHUB_TOKEN = "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";
-        const REPO_PATH = "TloiIos/Tloi"; // Ví dụ: ThanhLoi/Aurora
+        const REPO_PATH = "TloiIos/Tloi"; 
         const FILE_NAME = "keys.json";
 
         async function createKey() {
-            const key = document.getElementById('keyName').value;
+            const keyInput = document.getElementById('keyName');
+            const key = keyInput.value.trim();
             const status = document.getElementById('status');
             
             if (!key) { status.innerText = "❌ Chưa nhập tên Key!"; return; }
+            
             status.className = "loading";
             status.innerText = "⏳ Đang kết nối GitHub API...";
 
             try {
-                // 1. Lấy SHA và nội dung file keys.json hiện tại
+                // 1. Lấy nội dung file hiện tại
                 const getRes = await fetch(`https://api.github.com/repos/${REPO_PATH}/contents/${FILE_NAME}`, {
-                    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+                    headers: { 
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Cache-Control': 'no-cache'
+                    }
                 });
-                const fileData = await getRes.json();
-                const currentKeys = JSON.parse(atob(fileData.content));
 
-                // 2. Thêm Key mới vào danh sách
+                if (!getRes.ok) throw new Error("Không tìm thấy file keys.json hoặc Token sai!");
+
+                const fileData = await getRes.json();
+                
+                // Giải mã Base64 an toàn (loại bỏ xuống dòng/khoảng trắng)
+                let currentKeys = {};
+                try {
+                    const cleanContent = fileData.content.replace(/\s/g, '');
+                    const decodedData = decodeURIComponent(escape(atob(cleanContent)));
+                    currentKeys = JSON.parse(decodedData);
+                } catch (e) {
+                    console.log("File rỗng hoặc lỗi format, khởi tạo mới...");
+                    currentKeys = {};
+                }
+
+                // 2. Thêm Key mới
                 currentKeys[key] = {
                     "rank": "VIP",
                     "status": "Active",
-                    "date": new Date().toLocaleString()
+                    "date": new Date().toLocaleString('vi-VN')
                 };
 
-                // 3. Ghi đè file lên GitHub
+                // 3. Ghi đè lên GitHub (Mã hóa UTF-8 an toàn)
+                const jsonString = JSON.stringify(currentKeys, null, 4);
+                const encodedContent = btoa(unescape(encodeURIComponent(jsonString)));
+
                 const updateRes = await fetch(`https://api.github.com/repos/${REPO_PATH}/contents/${FILE_NAME}`, {
                     method: "PUT",
-                    headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
+                    headers: { 
+                        'Authorization': `token ${GITHUB_TOKEN}`, 
+                        'Content-Type': 'application/json' 
+                    },
                     body: JSON.stringify({
-                        message: "Admin Loi added new key: " + key,
-                        content: btoa(JSON.stringify(currentKeys, null, 4)),
+                        message: `Admin Loi added: ${key}`,
+                        content: encodedContent,
                         sha: fileData.sha
                     })
                 });
 
                 if (updateRes.ok) {
                     status.className = "success";
-                    status.innerText = "✅ KEY [" + key + "] ĐÃ ĐƯỢC KÍCH HOẠT!";
-                    document.getElementById('keyName').value = "";
+                    status.innerText = `✅ ĐÃ KÍCH HOẠT: ${key}`;
+                    keyInput.value = "";
                 } else {
-                    status.className = "error";
-                    status.innerText = "❌ Lỗi: Token hoặc Repo không đúng!";
+                    const errData = await updateRes.json();
+                    throw new Error(errData.message || "Lỗi khi cập nhật!");
                 }
+
             } catch (err) {
                 status.className = "error";
-                status.innerText = "❌ Lỗi hệ thống: " + err.message;
+                status.innerText = "❌ " + err.message;
             }
         }
     </script>
