@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN AURORA ELITE V50 - DASHBOARD</title>
+    <style>
+        :root { --neon: #00d2ff; --bg: #0b0e14; --card: #151921; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .container { background: var(--card); padding: 40px; border-radius: 20px; border: 2px solid var(--neon); box-shadow: 0 0 25px rgba(0, 210, 255, 0.3); text-align: center; width: 350px; position: relative; }
+        .container::before { content: "ADMIN PANEL"; position: absolute; top: -12px; left: 20px; background: var(--bg); padding: 0 10px; font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+        h2 { text-transform: uppercase; letter-spacing: 5px; margin-bottom: 30px; text-shadow: 0 0 10px var(--neon); }
+        input { background: #1b212c; border: 1px solid #333; color: white; padding: 15px; width: 80%; border-radius: 8px; outline: none; margin-bottom: 20px; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        button { background: var(--neon); color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.4s; width: 90%; text-transform: uppercase; letter-spacing: 2px; }
+        button:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: scale(1.05); }
+        #status { margin-top: 25px; font-size: 14px; font-weight: bold; }
+        .loading { color: #f1c40f; } .success { color: #2ecc71; } .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AURORA V50</h2>
+        <p style="color: #888; margin-bottom: 20px;">Hệ thống tạo Key tự động</p>
+        
+        <input type="text" id="keyName" placeholder="Nhập tên Key (VD: LOI_VIP)">
+        <button onclick="createKey()">Kích Hoạt Key</button>
+        
+        <div id="status">Sẵn sàng chờ lệnh...</div>
+    </div>
+
+    <script>
+        // === CẤU HÌNH ADMIN (LỢI ĐIỀN Ở ĐÂY) ===
+        const GITHUB_TOKEN = "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";
+        const REPO_PATH = "TloiIos/Tloi"; // Ví dụ: ThanhLoi/Aurora
+        const FILE_NAME = "keys.json";
+
+        async function createKey() {
+            const key = document.getElementById('keyName').value;
+            const status = document.getElementById('status');
+            
+            if (!key) { status.innerText = "❌ Chưa nhập tên Key!"; return; }
+            status.className = "loading";
+            status.innerText = "⏳ Đang kết nối GitHub API...";
+
+            try {
+                // 1. Lấy SHA và nội dung file keys.json hiện tại
+                const getRes = await fetch(`https://api.github.com/repos/${REPO_PATH}/contents/${FILE_NAME}`, {
+                    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+                });
+                const fileData = await getRes.json();
+                const currentKeys = JSON.parse(atob(fileData.content));
+
+                // 2. Thêm Key mới vào danh sách
+                currentKeys[key] = {
+                    "rank": "VIP",
+                    "status": "Active",
+                    "date": new Date().toLocaleString()
+                };
+
+                // 3. Ghi đè file lên GitHub
+                const updateRes = await fetch(`https://api.github.com/repos/${REPO_PATH}/contents/${FILE_NAME}`, {
+                    method: "PUT",
+                    headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: "Admin Loi added new key: " + key,
+                        content: btoa(JSON.stringify(currentKeys, null, 4)),
+                        sha: fileData.sha
+                    })
+                });
+
+                if (updateRes.ok) {
+                    status.className = "success";
+                    status.innerText = "✅ KEY [" + key + "] ĐÃ ĐƯỢC KÍCH HOẠT!";
+                    document.getElementById('keyName').value = "";
+                } else {
+                    status.className = "error";
+                    status.innerText = "❌ Lỗi: Token hoặc Repo không đúng!";
+                }
+            } catch (err) {
+                status.className = "error";
+                status.innerText = "❌ Lỗi hệ thống: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
